@@ -1,18 +1,56 @@
+from collections import defaultdict
+
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from Wagon_wheel.orders.forms import SignUpForm
+from .models import Category, Type, Price, Extra, Topping
+
 
 # Create your views here.
 
 def index(request):
     if not request.user.is_authenticated:
         return render(request, "users/login.html", {"message": None})
+    menu = {}
+    toppings_dict = {}
+    extras_dict = {}
+    types = Type.objects.all()
+    categories = Category.objects.all()
+    extras = Extra.objects.all()
+    toppings = Topping.objects.all()
+
+    for cat in categories:
+            for type in types:
+                if type.category == cat:
+                    menu.setdefault(cat.name, {}).setdefault(type.name, {})["id"] = type.id
+                    try:
+                        menu[cat.name][type.name]["large_price"] = float(type.price.get(size="Large").price)
+                    except:
+                        print("no price for large")
+                    try:
+                        menu[cat.name][type.name]["small_price"] = float(type.price.get(size="Small").price)
+                    except:
+                        print("no price for small")
+                    try:
+                        menu[cat.name][type.name]["one_price"] = float(type.price.get(size="N/A").price)
+                    except:
+                        print("no price for n/a")
+
+    for extra in extras:
+        extras_dict.setdefault(extra.name, {})["id"] = extra.id
+        extras_dict[extra.name]["price"] = float(extra.price)
+
+    for topping in toppings:
+        toppings_dict[topping.name] = topping.id
+
     context = {
-        "user": request.user
+        "menu": menu,
+        "extras": extras_dict,
+        "toppings": toppings_dict
     }
-    return render(request, "users/user.html", context)
+    return render(request, "orders/menu.html", context)
 
 def login_view(request):
     username = request.POST["username"]

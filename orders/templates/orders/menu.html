@@ -1,0 +1,55 @@
+{% extends "orders/base.html" %}
+
+{% block title %}
+    Menu
+{% endblock %}
+
+{% block body %}
+
+<div class="d-flex justify-content-center">
+     <div class="w-25 d-flex flex-column">
+        <div class="align-self-center">
+            <h1>Menu</h1>
+        </div>
+            {% for key, values in menu.items %}
+                    <div class="align-self-center">
+
+                            <h4>{{key}}  <small class="text-muted">S | L</small>
+                            </h4>
+
+                    </div>
+                    {% for k,v in values.items %}
+                        <div class="d-flex flex-row mb-1">
+                            <div class="mr-auto p-2">{{k}}</div>
+                            {% if v.small_price %}
+                                <div class="p-2"><b>$</b>{{v.small_price}}</div>
+                            {% endif %}
+                            {% if v.large_price %}
+                                <div class="p-2"><b>$</b>{{v.large_price}}</div>
+                            {% endif %}
+                            {% if v.one_price %}
+                                  <div class="p-2"><b>$</b>{{v.one_price}}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    {% if key == "Subs" %}
+                         {% for k,v in extras.items %}
+                            <div class="d-flex flex-row mb-1">
+                                <div class="mr-auto p-2">{{k}}</div>
+                                <div class="p-2"><b>$</b>{{v.price}}</div>
+                            </div>
+                         {% endfor %}
+                    {% endif %}
+            {% endfor %}
+     </div>
+     <div class="p-5 w-25 d-flex flex-column">
+          <div class="align-self-center">
+              <h4>Toppings</h4>
+          </div>
+         {% for key, values in toppings.items %}
+            <div>{{key}}</div>
+         {% endfor %}
+     </div>
+</div>
+
+{% endblock %}
