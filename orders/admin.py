@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from django.contrib import admin
 
-from .models import Category, Type, Price, Topping, Extra, S_Membership, P_Membership
+from .models import Category, Type, Price, Topping, Extra, S_Membership, P_Membership, Order, CartItem
 
 
 # class PizzaToppingInline(admin.StackedInline):
@@ -27,4 +27,6 @@ admin.site.register(S_Membership)
 admin.site.register(Price)
 admin.site.register(Topping)
 admin.site.register(Extra)
+admin.site.register(Order)
+admin.site.register(CartItem)
 

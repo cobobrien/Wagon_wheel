@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
-from Wagon_wheel.orders.forms import SignUpForm
+from .forms import SignUpForm
 from .models import Category, Type, Price, Extra, Topping
 
 
