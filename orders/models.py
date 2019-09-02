@@ -1,8 +1,11 @@
-
+from unicodedata import decimal
+from django.db.models.signals import m2m_changed
 from django.db import models
 from django.db.models import Sum
 from django.conf import settings
 from django.db.models.signals import pre_save
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 
 class Category(models.Model):
@@ -59,28 +62,6 @@ class Price(models.Model):
     class Meta:
         managed = True
 
-class Topping(models.Model):
-    name = models.CharField(max_length=100)
-    pizza = models.ManyToManyField(Type, through='P_Membership', related_name='toppings')
-
-
-    def __str__(self):
-        return f"{self.name}"
-
-    class Meta:
-        managed = True
-
-class Extra(models.Model):
-    name = models.CharField(max_length=100)
-    sub = models.ManyToManyField(Type, blank=True,through='S_Membership', related_name='extras')
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def __str__(self):
-        return f"{self.name}"
-
-    class Meta:
-        managed = True
-
 class Order(models.Model):
     PENDING = "Pending"
     SUBMITTED = "Submitted"
@@ -94,20 +75,21 @@ class Order(models.Model):
 
     @property
     def total(self):
-        return sum(item.price for item in self.items.all())
+        return sum(item.price for item in self.cart_items.all())
 
     @property
     def total2(self):
-        return self.items.all().aggregate(Sum('total_price'))['total_price__sum'] or 0.00
+        return self.cart_items.all().aggregate(Sum('total_price'))['total_price__sum'] or decimal(0.00)
 
     class Meta:
         managed = True
 
 class CartItem(models.Model):
-    item = models.ForeignKey(Type, on_delete=models.CASCADE)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    item = models.ForeignKey(Type, on_delete=models.CASCADE, related_name='orders')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='cart_items')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    main = models.ForeignKey(Category, on_delete=models.CASCADE)
 
     Not_applicable = "N/A"
     SMALL = "Small"
@@ -123,7 +105,7 @@ class CartItem(models.Model):
     def price(self):
         item_price=Price.objects.get(size=self.size, dish=self.item).price
         try:
-            extras = self.item.extras.all().aggregate(Sum('price'))['price__sum'] or 0.00
+            extras = self.extras.all().aggregate(Sum('price'))['price__sum'] or decimal(0.00)
         except:
             return item_price
         else:
@@ -133,10 +115,9 @@ class CartItem(models.Model):
             managed = True
 
 def set_total_price(sender, instance, **kwargs):
-    ''' Trigger body '''
     item_price=Price.objects.get(size=instance.size, dish=instance.item).price
     try:
-        extras = instance.item.extras.all().aggregate(Sum('price'))['price__sum'] or 0.00
+        extras = instance.extras.all().aggregate(Sum('price'))['price__sum'] or decimal(0.00)
     except:
         instance.total_price = item_price
     else:
@@ -144,18 +125,49 @@ def set_total_price(sender, instance, **kwargs):
 
 pre_save.connect(set_total_price, sender=CartItem)
 
-class P_Membership(models.Model):
-    topping = models.ForeignKey(Topping, on_delete=models.CASCADE)
-    pizza = models.ForeignKey(Type, on_delete=models.CASCADE)
-    main = models.ForeignKey(Category, on_delete=models.CASCADE)
+
+
+class Topping(models.Model):
+    name = models.CharField(max_length=100)
+    cart = models.ManyToManyField(CartItem, blank=True, related_name='toppings')
+
+    def __str__(self):
+        return f"{self.name}"
 
     class Meta:
         managed = True
 
-class S_Membership(models.Model):
-    topping = models.ForeignKey(Extra, on_delete=models.CASCADE)
-    sub_item = models.ForeignKey(Type, on_delete=models.CASCADE)
-    main = models.ForeignKey(Category, on_delete=models.CASCADE)
+class Extra(models.Model):
+    name = models.CharField(max_length=100)
+    cart = models.ManyToManyField(CartItem, blank=True, related_name='extras')
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.name}"
 
     class Meta:
         managed = True
+
+def toppings_changed(sender, **kwargs):
+    instance = kwargs.pop('instance', None)
+    action = kwargs.pop('action', None)
+    if action == "pre_add":
+        if "Pizza" not in instance.main.name:
+            raise ValidationError(
+                _('Toppings can only go on Pizzas'),
+            )
+
+
+m2m_changed.connect(toppings_changed, sender=CartItem.toppings.through)
+
+def extras_changed(sender, **kwargs):
+    instance = kwargs.pop('instance', None)
+    action = kwargs.pop('action', None)
+    if action == "pre_add":
+        if instance.main.name != "Sub":
+            raise ValidationError(
+                _('Extras can only be added to Subs'),
+            )
+
+
+m2m_changed.connect(extras_changed, sender=CartItem.extras.through)
