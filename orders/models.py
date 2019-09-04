@@ -84,12 +84,34 @@ class Order(models.Model):
     class Meta:
         managed = True
 
+class Topping(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.name}"
+
+    class Meta:
+        managed = True
+
+class Extra(models.Model):
+    name = models.CharField(max_length=100)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.name}"
+
+    class Meta:
+        managed = True
+
+
 class CartItem(models.Model):
     item = models.ForeignKey(Type, on_delete=models.CASCADE, related_name='orders')
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='cart_items')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     main = models.ForeignKey(Category, on_delete=models.CASCADE)
+    extras = models.ManyToManyField(Extra, blank=True, related_name='cart_items')
+    toppings = models.ManyToManyField(Topping, blank=True, related_name='cart_items')
 
     Not_applicable = "N/A"
     SMALL = "Small"
@@ -125,28 +147,6 @@ def set_total_price(sender, instance, **kwargs):
 
 pre_save.connect(set_total_price, sender=CartItem)
 
-
-
-class Topping(models.Model):
-    name = models.CharField(max_length=100)
-    cart = models.ManyToManyField(CartItem, blank=True, related_name='toppings')
-
-    def __str__(self):
-        return f"{self.name}"
-
-    class Meta:
-        managed = True
-
-class Extra(models.Model):
-    name = models.CharField(max_length=100)
-    cart = models.ManyToManyField(CartItem, blank=True, related_name='extras')
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def __str__(self):
-        return f"{self.name}"
-
-    class Meta:
-        managed = True
 
 def toppings_changed(sender, **kwargs):
     instance = kwargs.pop('instance', None)

@@ -1,0 +1,32 @@
+#banner{
+    border: solid;
+    background-color: white;
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+}
+#cart{
+  display:inline-block
+
+}
+#menu_title{
+ display:inline-block
+}
+button.small-btn {
+    width: 50px;
+    height: 25px;
+    padding: 0px;
+    font-color: black;
+}
+.cost{
+    font-size: 75%;
+    font-color: black;
+    text-align: center;
+}
+#cart_container{
+  border: solid;
+  display: flex;
+  flex-direction: column;
+  align-self: end;
+  visibility: hidden;
+}
