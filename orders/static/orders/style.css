@@ -24,9 +24,18 @@ button.small-btn {
     text-align: center;
 }
 #cart_container{
-  border: solid;
+  background-color: AntiqueWhite;
   display: flex;
   flex-direction: column;
   align-self: end;
   visibility: hidden;
+}
+#order_button{
+    bottom:0
+}
+#cart_items_list li {
+    list-style-type: none;
+    background-color: white;
+    margin: 0.25rem;
+    padding: 0.5rem;
 }

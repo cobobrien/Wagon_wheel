@@ -13,13 +13,12 @@ function cart(item){
       // Update the result div
       if (data.success) {
          var hasChild = document.getElementById("cart_items_list").querySelector("#empty_cart");
-         hasChild.remove();
-         const p_name = document.createElement('p');
-         p_name.innerHTML = data.cart_item;
-         const p_price = document.createElement('p');
-         p_price.innerHTML = data.price;
+         if(hasChild)
+            hasChild.remove();
+         const p_name = document.createElement('li');
+         p_name.innerHTML = data.cart_item + ": " + data.price;
+         p_name.className = "border border-light rounded";
          document.querySelector("#cart_items_list").append(p_name);
-         document.querySelector("#cart_items_list").append(p_price);
          var order_items = document.querySelector("#cart");
          order_items.innerHTML = "Cart(" + data.order_items + ")";
       }
