@@ -6,7 +6,7 @@ from django.conf import settings
 from django.db.models.signals import pre_save
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-
+from django.contrib.auth.models import User
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -72,6 +72,7 @@ class Order(models.Model):
         (COMPLETE, 'Complete'),
     )
     status = models.CharField(max_length=20, choices=ORDER_STATUS, default=PENDING)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     @property
     def total(self):
@@ -164,7 +165,7 @@ def extras_changed(sender, **kwargs):
     instance = kwargs.pop('instance', None)
     action = kwargs.pop('action', None)
     if action == "pre_add":
-        if instance.main.name != "Sub":
+        if instance.main.name != "Subs":
             raise ValidationError(
                 _('Extras can only be added to Subs'),
             )

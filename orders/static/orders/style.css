@@ -1,5 +1,7 @@
 #banner{
     border: solid;
+    border-width: thin;
+    border-radius: 5px;
     background-color: white;
     position: -webkit-sticky;
     position: sticky;
@@ -26,6 +28,8 @@ button.small-btn {
 #cart_container{
   background-color: AntiqueWhite;
   display: flex;
+  position: sticky;
+  top: 3.9rem;
   flex-direction: column;
   align-self: end;
   visibility: hidden;
@@ -38,4 +42,23 @@ button.small-btn {
     background-color: white;
     margin: 0.25rem;
     padding: 0.5rem;
+}
+
+button.pizza_topping{
+    border: none;
+    background: none;
+    background-color: white;
+    margin: 1px;
+    padding: none;
+}
+button.pizza_topping:hover{
+    background-color: lightgrey;
+}
+button.pizza_topping:focus{
+    outline-style: solid;
+    outline-width: thin;
+    outline-color: lightgrey;
+}
+#extra_price {
+    font-size: 75%;
 }

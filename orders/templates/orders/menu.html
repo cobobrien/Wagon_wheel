@@ -55,8 +55,10 @@
                     {% if key == "Subs" %}
                          {% for k,v in extras.items %}
                             <div class="d-flex flex-row mb-1">
-                                <div class="mr-auto p-2">{{k}}</div>
-                                <div class="p-2"><b>$</b>{{v.price}}</div>
+                                <div class="mr-auto p-2">
+                                    <button class="pizza_topping">{{k}}</button>
+                                </div>
+                                <div id= "extra_price" class="p-2"><b>$</b>{{v.price}}</div>
                             </div>
                          {% endfor %}
                     {% endif %}
@@ -68,11 +70,15 @@
               <h4>Toppings</h4>
           </div>
          {% for key, values in toppings.items %}
-            <div class="align-self-center">{{key}}</div>
+            <div class="align-self-center">
+                <button class="pizza_topping" onClick="addTopping(this)">{{key}}</button>
+            </div>
          {% endfor %}
      </div>
     <div id="cart_container" class="w-25 d-flex flex-column border border-secondary rounded">
-        <div id="cart_items_list"></div>
+        <div id="cart_items_list">
+
+        </div>
         <div id="order_button" class="mt-auto"><button type="button" class="btn btn-primary w-100">Order</button></div>
     </div>
 </div>

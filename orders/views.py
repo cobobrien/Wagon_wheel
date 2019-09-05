@@ -11,14 +11,14 @@ import logging
 from django.contrib.auth.models import User
 
 logger = logging.getLogger(__name__)
-user = None
-order = None
+
 
 def index(request):
     if not request.user.is_authenticated:
         return render(request, "users/login.html", {"message": None})
     menu = {}
     toppings_dict = {}
+    order_cart_items = {}
     extras_dict = {}
     types = Type.objects.all()
     categories = Category.objects.all()
@@ -44,27 +44,43 @@ def index(request):
 
     for extra in extras:
         extras_dict.setdefault(extra.name, {})["id"] = extra.id
-        extras_dict[extra.name]["price"] = float(extra.price)
+        extras_dict[extra.name]["price"] = "{:.2f}".format(float(extra.price))
 
     for topping in toppings:
         toppings_dict[topping.name] = topping.id
 
+    try:
+        order = Order.objects.get(user=request.user, status="Pending")
+    except:
+        logger.info("No order on server")
+    if(order):
+        for cart in order.cart_items.all():
+            order_cart_items.setdefault(cart.item.name, {})["price"] = cart.price
+            if (cart.extras.all()):
+                order_cart_items[cart.item.name]= []
+                for extra in cart.extras.all():
+                    order_cart_items[cart.item.name].append(extra.name)
+            if (cart.toppings.all()):
+                order_cart_items[cart.item.name] = []
+                for topping in cart.toppings.all():
+                    order_cart_items[cart.item.name].append(topping.name)
+
+
     context = {
         "menu": menu,
         "extras": extras_dict,
-        "toppings": toppings_dict
+        "toppings": toppings_dict,
+        "order": order_cart_items
     }
     return render(request, "orders/menu.html", context)
 
 def login_view(request):
-    global order
-    global user
+
     username = request.POST["username"]
     password = request.POST["password"]
     user = authenticate(request, username=username, password=password)
     if user is not None:
         login(request, user)
-        order = Order.objects.create()
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "users/login.html", {"message": "Invalid credentials."})
@@ -88,14 +104,20 @@ def register_view(request):
     return render(request, 'users/register.html', {'form': form})
 
 def cart(request):
-    logger.info("User: {}".format(user))
-    logger.info("Order: {}".format(order))
+    logger.info("User: {}".format(request.user))
+
     item_size = request.POST.get("item_size")
     item_id = request.POST.get("item_id")
     try:
         item = Type.objects.get(id=item_id)
         main = item.category
-        cart = CartItem.objects.create(item=item, order=order, user=user, size=item_size, main=main)
+        try:
+            order = Order.objects.get(user=request.user, status="Pending")
+        except:
+            order = Order.objects.create(user=request.user)
+        logger.info("Order: {}".format(order))
+        cart = CartItem.objects.create(item=item, order=order, user=request.user, size=item_size, main=main)
     except:
         return JsonResponse({"success": False})
-    return JsonResponse({"success": True, "cart_item": item.name, "price": cart.price, "order_items": order.cart_items.count()})
+    return JsonResponse({"success": True, "cart_item": item.name, "price": cart.price, "order_items": order.cart_items.count(), "order_total": order.total})
+
